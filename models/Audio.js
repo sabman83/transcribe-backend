@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-let Transcribe = new Schema({
+let Audio = new Schema({
   name: {
     type: String
   },
@@ -16,4 +16,4 @@ let Transcribe = new Schema({
   }
 });
 
-module.exports = mongoose.model('Transcribe', Transcribe);
+module.exports = mongoose.model('Audio', Audio);

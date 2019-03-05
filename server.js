@@ -1,17 +1,24 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const path = require('path')
 const cors = require('cors');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const fileUpload = require('express-fileupload');
 const PORT = 4000;
 
 
 const User = require("./models/User");
 const usersRouter = require("./routes/api/users");
 
-app.use(cors());
+const Audio = require("./models/Audio");
+const audioRouter = require("./routes/api/audio");
 
+
+app.use(cors());
+app.use(fileUpload())
+app.use('/', express.static(__dirname))
 
 // Bodyparser middleware
 app.use(
@@ -43,7 +50,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 // Routes
 app.use("/api/users", usersRouter);
-
+app.use("/api/audio", audioRouter);
 
 
 

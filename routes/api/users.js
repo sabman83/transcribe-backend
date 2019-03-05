@@ -73,7 +73,8 @@ const email = req.body.email;
         // Create JWT Payload
         const payload = {
           id: user.id,
-          name: user.name
+          name: user.name,
+          email: email
         };
 // Sign token
         jwt.sign(
@@ -85,7 +86,7 @@ const email = req.body.email;
           (err, token) => {
             res.json({
               success: true,
-              token: "Bearer " + token
+              token: token
             });
           }
         );
