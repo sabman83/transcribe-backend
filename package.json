@@ -17,11 +17,13 @@
     "body-parser": "^1.18.3",
     "concurrently": "^4.1.0",
     "cors": "^2.8.5",
+    "email-templates": "^5.0.4",
     "express": "^4.16.4",
     "express-fileupload": "^1.1.1-alpha.3",
     "is-empty": "^1.2.0",
     "jsonwebtoken": "^8.5.0",
     "mongoose": "^5.4.14",
+    "nodemailer": "^5.1.1",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
     "validator": "^10.11.0"

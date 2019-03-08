@@ -14,6 +14,8 @@ async function syncRecognize(
   const fs = require('fs');
   const speech = require('@google-cloud/speech');
 
+
+
   // Creates a client
   const client = new speech.SpeechClient({keyFilename:"/Users/sabman/Projects/foundry/transcribe-backend/files/my-first-project-d2ba0fb646f8.json",
   projectId:"planar-ember-233320"});
@@ -69,6 +71,7 @@ router.get("/list", (req, res) => {
    @access Public
 */
 router.post("/add", (req, res) => {
+  const Email  = require("email-templates");
   console.log("Decoding");
   var decoded = jwt.verify(req.headers.authorization, keys.secretKey);
   console.log("decoded: ", decoded)
@@ -96,6 +99,29 @@ router.post("/add", (req, res) => {
           syncRecognize(req.files.file.name)
             .then(function(res){
               console.log("TRANSCRIBED SUCCESSFULLY!", res);
+
+              //Send email
+              const email = new Email({
+                message: {
+                  from: 'career@foundry.com',
+                  attachments: [
+                    {
+                      filename: req.files.file.name + '.txt',
+                      content: res
+                    }
+                  ]
+                },
+                //send: true
+              });
+
+              email.send({
+                message: {
+                  to: "saby83@gmail.com"
+                }
+              })
+              .then(console.log("SENT EMAIL"))
+              .catch(console.error);
+
               Audio.findByIdAndUpdate( //update text on completion
                 doc._id,
                 {
