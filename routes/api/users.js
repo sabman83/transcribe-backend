@@ -14,7 +14,6 @@ const User = require("../../models/User");
 
 /* @route POST api/users/register
    @desc Register user
-   @access Public
 */
 router.post("/register", (req, res) => {
   // Form validation
@@ -50,7 +49,6 @@ const newUser = new User({
 
 // @route POST api/users/login
 // @desc Login user and return JWT token
-// @access Public
 router.post("/login", (req, res) => {
   // Form validation
 const { errors, isValid } = validateLoginInput(req.body);

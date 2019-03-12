@@ -35,15 +35,6 @@ mongoose.connect('mongodb://127.0.0.1:27017/transcribe', {
   .then(() => console.log("Connected Successfully with MongoDb transcribe"))
   .catch(err => console.log(err));
 
-/*
-const connection = mongoose.connection;
-
-connection.once('open', function() {
-  console.log("Connected successfully with transcribe db");
-});
-*/
-
-
 // Passport middleware
 app.use(passport.initialize());
 // Passport config
@@ -51,8 +42,6 @@ require("./config/passport")(passport);
 // Routes
 app.use("/api/users", usersRouter);
 app.use("/api/audio", audioRouter);
-
-
 
 
 app.listen(PORT, function() {

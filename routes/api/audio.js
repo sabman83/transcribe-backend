@@ -5,25 +5,31 @@ const jwt = require("jsonwebtoken");
 const keys = require("../../config/keys");
 const Audio = require("../../models/Audio");
 
+/*
+---------------------
+ Helper functions
+---------------------
+*/
 
-async function syncRecognize(
-  fileName
-) {
+/**
+* Takes a filename for the audio file in the files folder,
+* upload to Google Cloud Speech and fetch result
+**/
+async function syncRecognize(fileName) {
   // [START speech_transcribe_sync]
   // Imports the Google Cloud client library
   const fs = require('fs');
   const speech = require('@google-cloud/speech');
 
+  const client = new speech.SpeechClient({
+    keyFilename:"/Users/sabman/Projects/foundry/transcribe-backend/files/my-first-project-d2ba0fb646f8.json",
+    projectId:"planar-ember-233320"
+  });
 
-
-  // Creates a client
-  const client = new speech.SpeechClient({keyFilename:"/Users/sabman/Projects/foundry/transcribe-backend/files/my-first-project-d2ba0fb646f8.json",
-  projectId:"planar-ember-233320"});
-
-   const fullFileName = `${process.cwd()}/files/${fileName}`;
-   const encoding = 'ENCODING_UNSPECIFIED';
-   const sampleRateHertz = null;
-   const languageCode = 'en-US';
+  const fullFileName = `${process.cwd()}/files/${fileName}`;
+  const encoding = 'ENCODING_UNSPECIFIED';
+  const sampleRateHertz = null;
+  const languageCode = 'en-US';
 
   const config = {
     encoding: encoding,
@@ -50,6 +56,70 @@ async function syncRecognize(
 }
 
 
+/**
+* email transcript to user
+**/
+function emailTranscript(transcript, filename, emailId) {
+  const email = new Email({
+    message: {
+      from: 'career@foundry.com',
+      attachments: [
+        {
+          filename: filename + '.txt',
+          content: transcript
+        }
+      ]
+    },
+    //send: true, //TODO: remove comment for prod environment
+  });
+
+  email.send({
+    message: {
+      to: emailId
+    }
+  })
+  .then(console.log("SENT EMAIL"))
+  .catch(console.error);
+}
+
+/**
+* Save transcript and status to DB
+**/
+function saveTranscript(doc, transcript) {
+  Audio.findByIdAndUpdate( 
+    doc._id,
+    {
+      status: 'Success',   
+      text: transcript
+    },
+    {
+      new: true, // return updated doc
+    })
+  .then(doc => {
+    console.log("Saved to DB: " , doc);
+
+  })
+  .catch(err => {
+   Audio.findOneAndUpdate( //update status on error
+    { _id: doc._id },
+    {
+      status: 'Error: ' + err,
+    })
+    console.error(err)
+  });
+}
+
+
+/**
+---------------------
+Routes
+---------------------
+*/
+
+/**
+   @route GET api/users/list
+   @desc Get audios uploaded and transcribed by user
+**/
 router.get("/list", (req, res) => {
 
   var decoded = jwt.verify(req.headers.authorization, keys.secretKey);
@@ -67,8 +137,7 @@ router.get("/list", (req, res) => {
 
 
 /* @route POST api/users/add
-   @desc Register user
-   @access Public
+   @desc Upload and transcribe user
 */
 router.post("/add", (req, res) => {
   const Email  = require("email-templates");
@@ -94,55 +163,16 @@ router.post("/add", (req, res) => {
       });
 
       record.save()
-        .then(doc => { //upload to gcs
+        .then(doc => {
 
           syncRecognize(req.files.file.name)
             .then(function(res){
               console.log("TRANSCRIBED SUCCESSFULLY!", res);
 
-              //Send email
-              const email = new Email({
-                message: {
-                  from: 'career@foundry.com',
-                  attachments: [
-                    {
-                      filename: req.files.file.name + '.txt',
-                      content: res
-                    }
-                  ]
-                },
-                //send: true
-              });
+              emailTranscript(res, req.files.file.name, decoded.email);
 
-              email.send({
-                message: {
-                  to: "saby83@gmail.com"
-                }
-              })
-              .then(console.log("SENT EMAIL"))
-              .catch(console.error);
+              saveTranscript(doc, res);
 
-              Audio.findByIdAndUpdate( //update text on completion
-                doc._id,
-                {
-                  status: 'Success',   // field:values to update
-                  text: res
-                },
-                {
-                  new: true,                       // return updated doc
-                })
-              .then(doc => {
-                console.log("Saved to DB: " , doc);
-
-              })
-              .catch(err => {
-               Audio.findOneAndUpdate( //update status on error
-                { _id: doc._id },
-                {
-                  status: 'Error: ' + err,   // field:values to update
-                })
-                console.error(err)
-              })
             }, function(err){
               console.log("TRANSCRIBE FAILED", err);
             });
